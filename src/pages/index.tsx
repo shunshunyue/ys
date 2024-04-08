@@ -1,11 +1,59 @@
-import Head from "next/head";
-import Image from "next/image";
-import { Inter } from "next/font/google";
-import styles from "@/styles/Home.module.css";
+'use client'
 
-const inter = Inter({ subsets: ["latin"] });
+import Head from "next/head";
+import styles from "@/styles/Home.module.scss";
+import { AiOutlineArrowLeft, AiOutlineCheck } from "react-icons/ai";
+import { BsCheckCircleFill } from "react-icons/bs";
+import { MdOutlineContentCopy } from "react-icons/md";
+import dynamic from "next/dynamic";
+import { FiCheck } from "react-icons/fi";
+import { MdEdit } from "react-icons/md";
+import { RiDeleteBin6Fill } from "react-icons/ri";
+import { AiOutlineClose } from "react-icons/ai";
+import { Dialog } from 'primereact/dialog';
+import { useState } from "react";
+const ReactQuill = dynamic(import('react-quill'), {
+  ssr: false,
+  loading: () => <p>Loading ...</p>,
+});
+const modules = {
+  toolbar: {
+    container: [
+      ['bold', 'italic', 'underline', 'strike'], // 加粗，斜体，下划线，删除线
+      ['blockquote', 'code-block'], // 字体样式
+      [{ list: 'ordered' }, { list: 'bullet' }], // 有序列表，无序列表
+      [{ script: 'sub' }, { script: 'super' }], // 下角标，上角标
+      // [{ indent: '-1' }, { indent: '+1' }], // 缩进
+      [{ align: [] }], // 居中
+      // [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+      [{ color: [] }, { background: [] }], // 文字颜色、背景颜色选择
+      [{ direction: 'rtl' }], // 文字输入方向
+      [{ header: [1, 2, 3, 4, 5, 6, false] }], // 标题
+      [{ lineheight: ['1', '1.5', '1.75', '2', '3', '4', '5'] }], // 自定义行高
+      ['clean'], // 清除样式
+    ],
+
+  },
+
+}
+
+
 
 export default function Home() {
+  const [visible, setVisible] = useState(false);
+  const [dataList, setDataList] = useState([
+    {
+      id: uuid(),
+      title: "Orci varius natoque penatibus et magnis",
+      content: `Nunc eu quam sit amet justo elementum mollis
+      Maecenas quam nunc, sagittis non condimentum at, rutrum sit amet eros.Fusce rutrum, lectus in blandit sagittis, mi tortor ullamcorper mi, vitae vestibulum libero quam a nisi.In eu mauris et neque sodales porta eu eget dui.Nunc eu quam sit amet justo elementum mollis. 
+      Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.Sed laoreet metus nulla, in gravida urna rhoncus in.Proin laoreet semper tortor ac posuere. `    }
+  ])
+  const [cunData, setCunData] = useState({
+    title: "",
+    content: "",
+    id: ""
+  })
   return (
     <>
       <Head>
@@ -14,101 +62,153 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={`${styles.main} ${inter.className}`}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>src/pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{" "}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
+      <main className={styles.main}>
+        <div className={styles.container}>
+          <div className={styles.header}>
+            <AiOutlineArrowLeft style={{ fontSize: 20 }} />
+            <span>back</span>
           </div>
+          <div className={styles.title} onClick={() => {
+          }} ><span>Manage  post</span> </div>
+          <AddPost onPost={function (val: any): void {
+            dataList.push(val)
+            setDataList([...dataList])
+          }}></AddPost>
+          {dataList.map((item, i) => {
+            return (
+              <CartItem  {...item} key={item.id} onEdit={() => {
+                const newi = JSON.parse(JSON.stringify(item))
+                console.log(newi, "sssss")
+                setCunData(newi)
+                setVisible(true);
+              }} onDel={function (): void {
+                console.log(i)
+                dataList.splice(i, 1)
+                console.log(dataList, "sssss")
+                setDataList([...dataList])
+              }} />
+            )
+          })}
+
         </div>
+        <div className={styles['edit-box']}>
+          <Dialog visible={visible} style={{ width: "800px" }} header="Eidt Post" closable={false} onHide={() => { setVisible(false) }}>
+            <input className={styles['edit-input']} placeholder="Input post title" value={cunData.title} onChange={(e) => {
+              cunData.title = e.target.value
+              setCunData({ ...cunData })
+            }} />
+            <div className={styles['edit-quill']}><ReactQuill onChange={(e) => {
+              cunData.content = e
+            }} modules={modules} value={cunData?.content} style={{ height: 360 }} theme="snow" /></div>
+            <div className={styles['edit-button']}>
+              <div className={styles['edit-button-left']} onClick={() => {
+                const index = dataList.findIndex(item => item.id === cunData.id)
+                const newi = JSON.parse(JSON.stringify(cunData))
+                dataList[index] = newi
+                setDataList([...dataList])
+                setVisible(false)
+                setCunData({
+                  title: "",
+                  content: "",
+                  id: ""
+                })
 
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
+              }}  ><AiOutlineCheck style={{ fontSize: 18, fontWeight: 700 }} />save</div>
+              <div className={styles['edit-button-right']} onClick={() => {
+                setVisible(false)
+                setCunData({
+                  title: "",
+                  content: "",
+                  id: ""
+                })
+              }
+              }> <AiOutlineClose />Cancel</div>
+            </div>
+          </Dialog>
         </div>
       </main>
     </>
   );
+}
+
+const AddPost = (props: { onPost: (val: any) => void }) => {
+  const [data, setData] = useState({
+    id: "",
+    title: "",
+    content: ""
+  })
+  return (
+    <div className={styles['add-root']}>
+      <div className={styles['info-box']}>
+        <div className={styles['left']}><BsCheckCircleFill style={{ color: "#fff", fontSize: 40 }} /></div>
+        <div className={styles['right']}>
+          <span>link to your profile</span>
+          <span>https://twitter.com/p/12345 <MdOutlineContentCopy onClick={() => {
+            copyTextToClipboard("https://twitter.com/p/12345")
+            alert("已复制")
+          }} style={{ fontSize: 18, cursor: "pointer" }} /> </span>
+        </div>
+      </div>
+      <div className={styles['button-box']}>
+        <div className={styles['button']}>Settings</div>
+        <div className={styles['button']}>Posts<span>4</span></div>
+      </div>
+      <input onChange={(e) => {
+        data.title = e.target.value
+        setData(data)
+      }} className={styles['input']} placeholder="Input post title" />
+      <div className={styles['quill']}><ReactQuill modules={modules} onChange={(e) => {
+        console.log(e)
+        data.content = e
+        setData(data)
+      }} theme="snow" /></div>
+
+      <div className={styles['sumb']} onClick={() => {
+        data.id = uuid()
+        props.onPost(data)
+
+      }}  ><FiCheck style={{ fontSize: 18, fontWeight: 700 }} />post</div>
+    </div>
+  )
+}
+
+
+
+const CartItem = (props: { onEdit: () => void, onDel: () => void, title: string, content: string }) => {
+  const { onEdit, onDel, title, content } = props;
+  return (
+    <div className={styles['cart-root']}>
+      <div className={styles['header']}>
+        <div className={styles['left']}>
+          {title}
+        </div>
+        <div className={styles['right']}>
+          <div className={styles['edit-box']} onClick={onEdit}>
+            <MdEdit />
+            <div className={styles['edit']}>Edit</div>
+          </div>
+          <div className={styles['delete-box']} onClick={onDel}>
+            <RiDeleteBin6Fill />
+          </div>
+        </div>
+        <div className={styles['xian']}></div>
+      </div>
+      <div className={styles['content']} dangerouslySetInnerHTML={{ __html: content }}></div>
+    </div>
+  )
+
+}
+
+function uuid() {
+  var temp_url = URL.createObjectURL(new Blob());
+  var uuid = temp_url.toString(); // blob:https://xxx.com/b250d159-e1b6-4a87-9002-885d90033be3
+  URL.revokeObjectURL(temp_url);
+  return uuid.substr(uuid.lastIndexOf("/") + 1);
+}
+export async function copyTextToClipboard(text: string) {
+  if ('clipboard' in navigator) {
+    return await navigator.clipboard.writeText(text);
+  } else {
+    return document.execCommand('copy', true, text);
+  }
 }
